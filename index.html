@@ -322,7 +322,6 @@
       <h3>Extras</h3>
       <div class="mode"><b>Flashlight &amp; camera buttons</b><label class="pill"><input type="checkbox" id="lsBtns"><span></span></label></div>
       <div class="mode"><b>Home bar at the bottom</b><label class="pill"><input type="checkbox" id="lsBar"><span></span></label></div>
-      <div class="mode"><span><b>Haptic taps</b><small>Tap Test to feel it (iOS 18 or later)</small></span><button class="gbtn" id="hapticTest" style="padding:8px 16px">Test</button></div>
     </div>
 
     <div class="sec-label">Home Screens</div>
@@ -367,7 +366,7 @@
         </svg></div></li>
       <li><b>Match passcode length.</b> Hold any number on the keypad for 1 second to set how many dots show.</li>
       <li><b>Let them guess.</b> Each code they type fails like a real iPhone, and is secretly remembered.</li>
-      <li><b>Make it unlock.</b> Double-tap <b>Cancel</b>. You'll feel a tap and the dots blink once, and the next code anyone types unlocks it.
+      <li><b>Make it unlock.</b> Double-tap <b>Cancel</b>. The dots blink once, and the next code anyone types unlocks it.
         <div class="note">Or turn on <b>Automatic Unlock</b> in settings, and it unlocks by itself on the try you choose.</div>
         <div class="fig"><svg viewBox="0 0 320 210" aria-hidden="true">
           <rect width="320" height="210" fill="#232427"/>
@@ -566,35 +565,11 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
     // tiny dim-and-back on the dots so you know it took, even if the count didn't change
     dotsEl.classList.remove('pop');void dotsEl.offsetWidth;dotsEl.classList.add('pop');
   }
-  /* ---------- haptic taps ----------
-     iPhones don't let web pages vibrate, but since iOS 18 Safari plays a light haptic tap
-     when a page's toggle switch is flipped. Flipping a hidden one gives that tap. It only
-     works during (or just after) a touch, on iOS 18+, with System Haptics turned on. */
-  const haptic=(function(){
-    // same method as the ios-haptics library: a fresh hidden switch inside a label,
-    // clicked once and removed straight away
-    function tap(){
-      try{
-        const label=document.createElement('label');
-        label.setAttribute('aria-hidden','true');label.style.display='none';
-        const input=document.createElement('input');input.type='checkbox';input.setAttribute('switch','');
-        label.appendChild(input);document.head.appendChild(label);
-        label.click();
-        document.head.removeChild(label);
-      }catch(e){}
-    }
-    return {tap,twice(){tap();setTimeout(tap,110)}};
-  })();
-
   function addDigit(d){
     if(state.busy||state.entry.length>=state.len)return;
     state.entry+=d;renderDots();
     if(state.entry.length===state.len){
       state.busy=true;const code=state.entry;
-      // a wrong code buzzes like a real iPhone: a double tap, started while the finger is still on the key
-      const round=state.newRound?0:state.attempts.length;
-      const willUnlock=state.magic||(state.autoTry>0&&round+1>=state.autoTry);
-      if(!willUnlock)haptic.twice();
       setTimeout(()=>submit(code),120);
     }
   }
@@ -624,7 +599,6 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
       if(now-lastCancelTap<400){
         lastCancelTap=0;clearTimeout(cancelBackTimer);
         state.magic=!state.magic;state.entry='';state.busy=false;renderDots();
-        if(state.magic)haptic.tap();else haptic.twice();   // secret cue: one tap = on, two = off
         // the passcode dots blink once: short blink = on, long blink = off
         dotsEl.style.transition='none';dotsEl.style.opacity='.25';
         setTimeout(()=>{dotsEl.style.transition='opacity .2s';dotsEl.style.opacity=''},state.magic?260:900);
@@ -1497,7 +1471,6 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
   $('clearRemembered').addEventListener('click',()=>{state.attempts=[];LS.set('mt_attempts',[]);renderSettings()});
   $('testHome').addEventListener('click',()=>{settingsEl.classList.remove('active');lockEl.style.visibility='';wallEl.style.visibility='';wallEl.classList.add('gone');lockEl.style.opacity='1';unlock()});
   $('closeSettings').addEventListener('click',closeSettings);
-  $('hapticTest').addEventListener('click',()=>haptic.twice());
   (function(){
     const g=$('wallGear');let t0=0;
     g.addEventListener('touchstart',e=>{e.stopPropagation();t0=Date.now()},{passive:true});
