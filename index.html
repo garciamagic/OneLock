@@ -80,6 +80,11 @@
   #wall .lsBtn.down{transform:scale(1.14);transition:transform .35s cubic-bezier(.2,.8,.2,1)}
   #wall .lsBtn svg{width:100%;height:100%;display:block}
   #wall.noBtns .lsBtn,#wall.noBar .homebar{display:none}
+  /* discreet settings gear just above the home bar: faint white with a dark halo so it shows on light and dark wallpapers */
+  #wall .wallGear{position:absolute;left:50%;bottom:36px;width:40px;height:40px;margin-left:-20px;padding:10px;border:0;background:none;
+    opacity:.5;filter:drop-shadow(0 0 1px rgba(0,0,0,.9)) drop-shadow(0 0 2px rgba(0,0,0,.5));touch-action:none;cursor:pointer}
+  #wall .wallGear svg{width:100%;height:100%;display:block}
+  #wall .wallGear:active{opacity:.8}
   /* iOS-style unlock: the passcode screen fades and drifts forward while the home screen
      zooms in from slightly too big, sharpening as it settles */
   @keyframes lockOut{to{opacity:0;transform:scale(1.07)}}
@@ -230,6 +235,7 @@
     <circle cx="87.5" cy="92.5" r="19" fill="#080808"/><circle cx="87.5" cy="92.5" r="14.5" fill="#f4f4f4"/>
     <circle cx="115.5" cy="78.5" r="4" fill="#080808"/></svg></div>
   <div class="homebar"></div>
+  <button class="wallGear" id="wallGear" aria-label="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" fill-rule="evenodd" d="M10.3 2h3.4l.5 2.6c.6.2 1.2.5 1.7.9l2.5-.9 1.7 2.9-2 1.8c.1.6.1 1.2 0 1.8l2 1.8-1.7 2.9-2.5-.9c-.5.4-1.1.7-1.7.9l-.5 2.6h-3.4l-.5-2.6c-.6-.2-1.2-.5-1.7-.9l-2.5.9-1.7-2.9 2-1.8a5.6 5.6 0 0 1 0-1.8l-2-1.8 1.7-2.9 2.5.9c.5-.4 1.1-.7 1.7-.9zM12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8z" transform="translate(0 0.5)"/></svg></button>
 </div>
 
 <div id="lock" class="screen active">
@@ -258,7 +264,7 @@
     <div class="card">
       <div class="mc-head"><h3>Passcode Length</h3>
         <div class="stepper"><button id="lenMinus" aria-label="Fewer">−</button><output id="lenVal">4</output><button id="lenPlus" aria-label="More">+</button></div></div>
-      <p class="note">How many dots the keypad shows. You can also change it on the keypad by holding a number for 2 seconds.</p>
+      <p class="note">How many dots the keypad shows. You can also change it on the keypad by holding a number for 1 second.</p>
     </div>
 
     <div class="card mode-card" id="autoCard">
@@ -279,6 +285,7 @@
 
     <div class="card">
       <div class="mc-head"><h3>Remembered Codes</h3><button class="gbtn red" id="clearRemembered" style="padding:8px 14px">Clear</button></div>
+      <p class="sub" style="margin:8px 0 0">From the last performance, in order. They stay after you lock the phone, and clear when the next person types a code.</p>
       <div class="codes" id="codeList" style="margin-top:12px"></div>
     </div>
 
@@ -321,7 +328,6 @@
         <button class="gbtn red" id="removeAll">Remove all</button>
       </div>
       <input id="fileInput" type="file" accept="image/*" multiple>
-      <div class="mode"><span><b>Hide old clock</b><small>Removes the time from new screenshots</small></span><label class="pill"><input type="checkbox" id="cleanBar"><span></span></label></div>
     </div>
   </div>
 </div>
@@ -336,11 +342,10 @@
     <p class="lead">Do this once, before you perform.</p>
     <ol class="steps">
       <li><b>Add it to your Home Screen.</b> Open the link in Safari, tap <b>Share</b>, then <b>Add to Home Screen</b>. Always open it from that icon so it fills the screen.</li>
-      <li><b>Open these settings.</b> On the passcode keypad, <b>double-tap "Emergency"</b>. The screen flips around. Tap <b>Done</b> to flip back.</li>
+      <li><b>Open these settings.</b> Tap the faint <b>gear</b> just above the bar at the bottom of the lock screen, or <b>double-tap "Emergency"</b> on the passcode keypad. The screen flips around. Tap <b>Done</b> to flip back.</li>
       <li><b>Add your home screens.</b> Take screenshots of your real home screen pages and add them under <b>Your Home Screens</b>. Until you do, the built-in ones are used.</li>
       <li><b>Pick a wallpaper.</b> Choose a built-in one or your own lock screen photo under <b>Wallpaper</b>.</li>
-      <li><b>Turn on Guided Access</b> (recommended). In iPhone <b>Settings → Accessibility → Guided Access</b>, turn it on and set a passcode. Then in OneLock, triple-click the side button and tap <b>Start</b>. This stops anyone from swiping up from the bottom edge and closing the app.
-        <div class="note">To leave Guided Access later, triple-click the side button and enter its passcode.</div></li>
+      <li><b>Stay away from the edges.</b> Swiping in from the very edges of the screen is handled by the real iPhone, not OneLock. A swipe up from the bottom edge can close the app, and a swipe down from the top edge opens your iPhone's notifications. Start your swipes a little in from the edges, and keep an eye on your spectator's swipes too.</li>
     </ol>
 
     <h2 class="part">Part 2: Performing</h2>
@@ -361,8 +366,8 @@
           <g fill="none" stroke="#fff" stroke-width=".8"><circle cx="228" cy="50" r="2.4"/><circle cx="236" cy="50" r="2.4"/><circle cx="244" cy="50" r="2.4"/><circle cx="252" cy="50" r="2.4"/></g>
           <g fill="#8a8a8a"><circle cx="222" cy="72" r="8"/><circle cx="240" cy="72" r="8"/><circle cx="258" cy="72" r="8"/><circle cx="222" cy="92" r="8"/><circle cx="240" cy="92" r="8"/><circle cx="258" cy="92" r="8"/><circle cx="222" cy="112" r="8"/><circle cx="240" cy="112" r="8"/><circle cx="258" cy="112" r="8"/><circle cx="240" cy="132" r="8"/></g>
         </svg></div></li>
-      <li><b>Set the number of digits</b> if needed: hold any number from 1 to 9 for 2 seconds. The dots change to match. Or set it here under <b>Passcode Length</b>.</li>
-      <li><b>Let them guess.</b> Hand them the phone. Each code shakes and fails like a real iPhone, and is secretly remembered.</li>
+      <li><b>Set the number of digits</b> if needed: hold any number from 1 to 9 for 1 second. The dots change to match. Or set it here under <b>Passcode Length</b>.</li>
+      <li><b>Let them guess.</b> Hand them the phone, and ask them to type a code. Each code shakes and fails like a real iPhone, and is secretly remembered.</li>
       <li><b>Make it unlock.</b> Pick one of these:
         <div class="note"><b>Double-tap "Cancel"</b> whenever you like. The dots blink once, and the next code anyone types unlocks it. Double-tap again to turn it off (the dots blink longer).</div>
         <div class="note"><b>Automatic Unlock</b> in settings: the phone unlocks by itself on the try you choose. Example: with try 3, the first two codes fail and the third one unlocks. Your own tries count too.</div>
@@ -376,8 +381,8 @@
           <circle cx="182" cy="68" r="12" fill="none" stroke="#81c995" stroke-width="1.6"/>
           <text x="96" y="175" fill="#8ab4f8" font-size="9" text-anchor="end">Double-tap:</text><text x="96" y="187" fill="#8ab4f8" font-size="9" text-anchor="end">settings</text>
           <text x="224" y="175" fill="#f28b82" font-size="9">Double-tap:</text><text x="224" y="187" fill="#f28b82" font-size="9">any code unlocks</text>
-          <text x="224" y="64" fill="#81c995" font-size="9">Hold 2s:</text><text x="224" y="76" fill="#81c995" font-size="9">number of dots</text>
-          <text x="96" y="24" fill="#c58af9" font-size="9" text-anchor="end">Hold empty</text><text x="96" y="36" fill="#c58af9" font-size="9" text-anchor="end">space 2s: back</text><text x="96" y="48" fill="#c58af9" font-size="9" text-anchor="end">to lock screen</text>
+          <text x="224" y="64" fill="#81c995" font-size="9">Hold 1s:</text><text x="224" y="76" fill="#81c995" font-size="9">number of dots</text>
+          <text x="96" y="24" fill="#c58af9" font-size="9" text-anchor="end">Hold empty</text><text x="96" y="36" fill="#c58af9" font-size="9" text-anchor="end">space 1s: back</text><text x="96" y="48" fill="#c58af9" font-size="9" text-anchor="end">to lock screen</text>
           <circle cx="160" cy="26" r="5" fill="none" stroke="#c58af9" stroke-width="1.6" stroke-dasharray="2 2"/>
         </svg></div></li>
     </ol>
@@ -398,31 +403,32 @@
             <rect x="265" y="21" width="22" height="16" rx="8" fill="#eb4f4f"/><text x="276" y="33">75</text></g>
           <text x="160" y="100" fill="#a7a8ad" font-size="12" text-anchor="middle">Their code: <tspan fill="#fff" font-weight="600">48 21 93 75</tspan></text>
         </svg></div>
-        <div class="note">A pair starting with 0 shows one digit, like a real badge: <span class="guide-code">05</span> shows as <span class="guide-code">5</span>, and <span class="guide-code">00</span> shows no badge. Since you know the code length, a missing badge means 00.</div></li>
+        <div class="note">Zeros always show, so no digits are missed. For example, <span class="guide-code">1005</span> shows as <span class="guide-code">10</span> and <span class="guide-code">05</span>.</div></li>
       <li><b>See the other codes.</b> Double-tap anywhere on a home page and the badges switch to the next remembered code. It loops back around. All codes, including the one that unlocked, are also listed here under <b>Remembered Codes</b>.</li>
     </ol>
 
     <h2 class="part">Part 4: Resetting</h2>
     <ol class="steps">
-      <li><b>Lock it again.</b> On a home page, pull down from the very top edge, or hold your finger still anywhere for 2 seconds. The lock screen slides back down.</li>
-      <li><b>That's it.</b> Locking clears the remembered codes and turns the unlock off, ready for the next person.</li>
+      <li><b>Lock it again.</b> On a home page, put your finger in the space just above the top row of apps and slide down, or hold your finger still anywhere for 1 second. The lock screen slides back down.</li>
+      <li><b>That's it.</b> Locking turns the unlock off, ready for the next person. All the codes are still listed under <b>Remembered Codes</b> in settings until the next person types a code.</li>
     </ol>
 
     <h2 class="part">Secret controls</h2>
     <table class="ctrl">
       <tr><td>Lock screen</td><td>Swipe up for the keypad</td></tr>
-      <tr><td>Number key</td><td>Hold 2s to set the number of dots</td></tr>
+      <tr><td>Number key</td><td>Hold 1s to set the number of dots</td></tr>
       <tr><td>Cancel</td><td>Double-tap: any code unlocks (again to turn off)</td></tr>
+      <tr><td>Lock screen gear</td><td>Tap: open settings</td></tr>
       <tr><td>Emergency</td><td>Double-tap: open settings</td></tr>
-      <tr><td>Keypad, empty spot</td><td>Hold 2s: back to the lock screen</td></tr>
+      <tr><td>Keypad, empty spot</td><td>Hold 1s: back to the lock screen</td></tr>
       <tr><td>Home page</td><td>Double-tap: show the next code</td></tr>
-      <tr><td>Home page</td><td>Pull down from the top, or hold 2s: lock and reset</td></tr>
+      <tr><td>Home page</td><td>Slide down from just above the top row of apps, or hold 1s: lock and reset</td></tr>
     </table>
 
     <h2 class="part">Before you perform</h2>
     <ul class="check">
       <li>Opened from the Home Screen icon, not from Safari</li>
-      <li>Guided Access started</li>
+      <li>Swipes start away from the edges of the screen</li>
       <li>Your own home screen screenshots added</li>
       <li>Passcode length matches your real iPhone</li>
       <li>Phone locked, so it starts fresh</li>
@@ -466,8 +472,9 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
     entry:'',
     busy:false,
     attempts:LS.get('mt_attempts',[]),
+    newRound:LS.get('mt_newRound',false),
     revealMode:(v=>v==='last'?'last':'first')(LS.get('mt_revealMode','first')),
-    cleanBar:LS.get('mt_cleanBar',true),
+    cleanBar:true,   // always paint out the screenshot's old clock; the phone's live one shows instead
     autoTry:LS.get('mt_autoTry',0)
   };
   let shots=[]; // {id, blob}
@@ -500,7 +507,7 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
   /* Uses raw touch events on the phone (no browser gesture delays), mouse on desktop.
      The hold fires the instant the time is up, while your finger is still down,
      and the key lets go of its highlight so you can feel/see it registered. */
-  const HOLD_MS=2000;
+  const HOLD_MS=1000;
   function holdable(el,{ms=HOLD_MS,onHold,onTap,onDown,onUp}){
     let t=null,fired=false,on=false,sx=0,sy=0;
     const start=(x,y)=>{
@@ -563,6 +570,8 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
     }
   }
   function submit(code){
+    // the first code after locking starts a new round, clearing the last performance's codes
+    if(state.newRound){state.attempts=[];state.newRound=false;LS.set('mt_newRound',false)}
     // every code is remembered, including the one that unlocks
     state.attempts.push(code);LS.set('mt_attempts',state.attempts);
     if(state.magic){unlock();return}
@@ -598,13 +607,13 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
   });
   let cancelBackTimer=null;
   /* Hold any empty part of the keypad screen (not the keys, Emergency or Cancel) for
-     2 seconds to slide the clock wallpaper back down — same as on the home screens */
+     1 second to slide the clock wallpaper back down — same as on the home screens */
   (function(){
     let t=null,sx=0,sy=0;
     const skip=e=>e.target.closest('.key,#emergencyBtn,#cancelBtn');
     const cancel=()=>{if(t){clearTimeout(t);t=null}};
     lockEl.addEventListener('pointerdown',e=>{cancel();if(skip(e))return;sx=e.clientX;sy=e.clientY;
-      t=setTimeout(()=>{t=null;if(!state.busy&&!settingsEl.classList.contains('active'))showWall(true)},2000)});
+      t=setTimeout(()=>{t=null;if(!state.busy&&!settingsEl.classList.contains('active'))showWall(true)},1000)});
     lockEl.addEventListener('pointermove',e=>{if(Math.abs(e.clientX-sx)>10||Math.abs(e.clientY-sy)>10)cancel()});
     lockEl.addEventListener('pointerup',cancel);lockEl.addEventListener('pointercancel',cancel);
     lockEl.addEventListener('contextmenu',e=>e.preventDefault());
@@ -641,7 +650,8 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
   }
   function relock(){
     state.magic=false;state.entry='';state.busy=false;
-    state.attempts=[];LS.set('mt_attempts',[]);
+    // the codes are kept so you can still read them in settings; they clear when the next code is typed
+    state.newRound=true;LS.set('mt_newRound',true);
     renderDots();
     homeEl.classList.remove('active');
     lockEl.classList.add('active');
@@ -840,10 +850,10 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
         lockEl.style.transition='opacity .3s';lockEl.style.opacity='0';
       }
     };
-    wallEl.addEventListener('touchstart',e=>{e.preventDefault();start(e.touches[0].clientY)},{passive:false});
+    wallEl.addEventListener('touchstart',e=>{e.preventDefault();if(e.target.closest('#wallGear'))return;start(e.touches[0].clientY)},{passive:false});
     wallEl.addEventListener('touchmove',e=>{e.preventDefault();move(e.touches[0].clientY)},{passive:false});
     wallEl.addEventListener('touchend',end);wallEl.addEventListener('touchcancel',end);
-    wallEl.addEventListener('mousedown',e=>{e.preventDefault();start(e.clientY)});
+    wallEl.addEventListener('mousedown',e=>{e.preventDefault();if(e.target.closest('#wallGear'))return;start(e.clientY)});
     addEventListener('mousemove',e=>move(e.clientY));addEventListener('mouseup',end);
   })();
 
@@ -863,13 +873,19 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
     homeEl.addEventListener('scroll',()=>{lastTap=null},{passive:true});
   })();
 
-  /* Pull down from the top edge of a home screen: the lock screen slides down over it
-     (like iOS's swipe-down from the top). Letting go past a quarter of the way locks. */
+  /* Pull down from just above the top row of apps: the lock screen slides down over it.
+     (Not from the very top edge: that opens the real iPhone's Notification/Control Center.)
+     Letting go past a quarter of the way locks. */
+  function topRowY(){
+    const im=homeEl.querySelector('.page img');
+    if(!im||!im.naturalWidth)return 90;
+    const m=mapping(im);return 0.103*im.naturalHeight*m.scale+m.offY;   // top of the first row of icons
+  }
   (function(){
     let y0=null,dy=0,active=false;
     const H=()=>wallEl.clientHeight||innerHeight;
     homeEl.addEventListener('touchstart',e=>{
-      const t=e.touches[0];y0=t.clientY<70?t.clientY:null;dy=0;active=false;
+      const t=e.touches[0];y0=t.clientY<topRowY()+28?t.clientY:null;dy=0;active=false;
     },{passive:true});
     homeEl.addEventListener('touchmove',e=>{
       if(y0===null)return;const t=e.touches[0];dy=t.clientY-y0;
@@ -890,11 +906,11 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
     homeEl.addEventListener('touchend',end);homeEl.addEventListener('touchcancel',end);
   })();
 
-  /* Hold anywhere on a home screen for 2s to lock again */
+  /* Hold anywhere on a home screen for 1s to lock again */
   (function(){
     let t=null,sx=0,sy=0;
     const cancel=()=>{if(t){clearTimeout(t);t=null}};
-    homeEl.addEventListener('pointerdown',e=>{sx=e.clientX;sy=e.clientY;cancel();t=setTimeout(()=>{t=null;relock()},2000)});
+    homeEl.addEventListener('pointerdown',e=>{sx=e.clientX;sy=e.clientY;cancel();t=setTimeout(()=>{t=null;relock()},1000)});
     homeEl.addEventListener('pointermove',e=>{if(Math.abs(e.clientX-sx)>10||Math.abs(e.clientY-sy)>10)cancel()});
     homeEl.addEventListener('pointerup',cancel);
     homeEl.addEventListener('pointercancel',cancel);
@@ -904,7 +920,7 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
 
   /* the remembered code, split into dock badges: 2 digits each, 4 badges.
      A 9th digit is added to the last badge (iOS shows 3-digit badges, like 307).
-     Leading zeros are dropped like a real badge would ("05" shows as 5), and "00" shows no badge. */
+     Every digit shows, including zeros ("05" shows as 05, "00" as 00). */
   /* which remembered code the badges show; double-tapping a home page moves to the next one */
   let revealIdx=null;
   function revealCode(){
@@ -923,7 +939,7 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
     const parts=[];for(let i=0;i<code.length&&parts.length<4;i+=2)parts.push(code.slice(i,i+2));
     if(code.length>8)parts[3]+=code.slice(8);
     while(parts.length<4)parts.push('');
-    return parts.map(t=>t.replace(/^0+/,''));
+    return parts;                       // every digit shows, zeros included (05 stays 05, 00 stays 00)
   }
 
   /* ---------- home screens ----------
@@ -1335,14 +1351,18 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
       setTimeout(()=>{to.classList.remove('flipIn');flipping=false},283);
     },273);
   }
+  let settingsFrom=null;
   function openSettings(){
+    const from=wallEl.classList.contains('gone')?lockEl:wallEl;
+    settingsFrom=from;
     setTheme('settings');
     renderSettings();$('settingsBody').scrollTop=0;
-    flip(lockEl,settingsEl,()=>settingsEl.classList.add('active'),()=>{lockEl.style.visibility='hidden'});
+    flip(from,settingsEl,()=>settingsEl.classList.add('active'),()=>{from.style.visibility='hidden'});
   }
   function closeSettings(){
-    setTheme('lock');
-    flip(settingsEl,lockEl,()=>{lockEl.style.visibility=''},()=>settingsEl.classList.remove('active'));
+    const to=settingsFrom||lockEl;
+    setTheme(to===wallEl?'wall':'lock');
+    flip(settingsEl,to,()=>{to.style.visibility=''},()=>settingsEl.classList.remove('active'));
   }
   /* segmented buttons */
   function setSeg(id,v){$(id).querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===v))}
@@ -1378,7 +1398,7 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
     const add=document.createElement('label');add.className='tile';add.htmlFor='wallInput';
     add.innerHTML='<div class="ph">+</div><span>'+(wallBlob?'Change photo':'Add photo')+'</span>';t.appendChild(add);
     setSeg('clockSeg',state.clockStyle);setSeg('padSeg',state.padStyle);
-    $('lsBtns').checked=state.lsBtns;$('lsBar').checked=state.lsBar;$('cleanBar').checked=state.cleanBar;
+    $('lsBtns').checked=state.lsBtns;$('lsBar').checked=state.lsBar;
     // home screens
     $('shotsSub').textContent=shots.length?'Your screenshots, in swipe order. Use the arrows to reorder.':'Using the built-in screenshots. Add screenshots of your own home screen pages, in swipe order.';
     $('removeAll').style.display=shots.length?'':'none';
@@ -1407,8 +1427,14 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
   });
   $('removeAll').addEventListener('click',async()=>{if(confirm('Remove all your screenshots and go back to the built-in ones?')){shots=[];await saveShots();renderSettings()}});
   $('clearRemembered').addEventListener('click',()=>{state.attempts=[];LS.set('mt_attempts',[]);renderSettings()});
-  $('testHome').addEventListener('click',()=>{settingsEl.classList.remove('active');lockEl.style.visibility='';unlock()});
+  $('testHome').addEventListener('click',()=>{settingsEl.classList.remove('active');lockEl.style.visibility='';wallEl.style.visibility='';wallEl.classList.add('gone');lockEl.style.opacity='1';unlock()});
   $('closeSettings').addEventListener('click',closeSettings);
+  (function(){
+    const g=$('wallGear');let t0=0;
+    g.addEventListener('touchstart',e=>{e.stopPropagation();t0=Date.now()},{passive:true});
+    g.addEventListener('touchend',e=>{e.preventDefault();e.stopPropagation();if(Date.now()-t0<600)openSettings()},{passive:false});
+    g.addEventListener('click',e=>{e.stopPropagation();openSettings()});
+  })();
   $('openGuide').addEventListener('click',()=>{$('guide').classList.add('open');$('guide').querySelector('.pg-body').scrollTop=0});
   $('closeGuide').addEventListener('click',()=>$('guide').classList.remove('open'));
   $('guideIcon').src=document.querySelector('link[rel=apple-touch-icon]').href;
@@ -1431,7 +1457,6 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
   });
   $('lsBtns').addEventListener('change',e=>{state.lsBtns=e.target.checked;LS.set('mt_lsBtns',state.lsBtns);applyWallExtras()});
   $('lsBar').addEventListener('change',e=>{state.lsBar=e.target.checked;LS.set('mt_lsBar',state.lsBar);applyWallExtras()});
-  $('cleanBar').addEventListener('change',e=>{state.cleanBar=e.target.checked;LS.set('mt_cleanBar',state.cleanBar)});
   /* the lock screen buttons grow a little while pressed, like iOS (a swipe from them still works) */
   wallEl.querySelectorAll('.lsBtn').forEach(b=>{
     b.addEventListener('touchstart',()=>b.classList.add('down'),{passive:true});
