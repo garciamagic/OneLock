@@ -217,6 +217,11 @@
       <input type="checkbox" id="cleanBar">
     </div>
 
+    <h3>Automatic unlock</h3>
+    <div class="row"><label for="autoTry">Unlock by itself on</label>
+      <select id="autoTry"><option value="0">Off</option><option value="2">Try 2</option><option value="3">Try 3</option><option value="4">Try 4</option><option value="5">Try 5</option><option value="6">Try 6</option><option value="7">Try 7</option><option value="8">Try 8</option><option value="9">Try 9</option><option value="10">Try 10</option></select></div>
+    <p class="muted">Example: with Try 3, the first two codes fail and are remembered, and the third code entered unlocks. Every try counts, including any you make yourself, and the count starts over when you lock again. The code that unlocks is remembered too. Double-tapping Cancel still works too.</p>
+
     <h3>Secret reveal</h3>
     <div class="row"><label for="revealMode">Show in dock badges</label>
       <select id="revealMode"><option value="first">First code entered</option><option value="last">Last code entered</option></select></div>
@@ -224,7 +229,7 @@
 
     <h3>How to perform</h3>
     <ol>
-      <li>Swipe up on the lock screen to bring up the keypad. Double-tap any empty spot on the keypad screen to go back to the lock screen.</li>
+      <li>Swipe up on the lock screen to bring up the keypad. Hold any empty spot on the keypad screen for 2s to go back to the lock screen.</li>
       <li>Hold any digit 1–9 for 2s to set how many dots there are.</li>
       <li>Type a code — it shakes and fails, like a real phone. It’s secretly remembered.</li>
       <li>Double-tap <b>Cancel</b>. The passcode dots blink once: any code now unlocks. (Double-tap again to turn it off — they blink longer.)</li>
@@ -275,7 +280,8 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
     busy:false,
     attempts:LS.get('mt_attempts',[]),
     revealMode:(v=>v==='last'?'last':'first')(LS.get('mt_revealMode','first')),
-    cleanBar:LS.get('mt_cleanBar',true)
+    cleanBar:LS.get('mt_cleanBar',true),
+    autoTry:LS.get('mt_autoTry',0)
   };
   let shots=[]; // {id, blob}
   const urlCache={};
@@ -370,8 +376,11 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
     }
   }
   function submit(code){
-    if(state.magic){unlock();return}
+    // every code is remembered, including the one that unlocks
     state.attempts.push(code);LS.set('mt_attempts',state.attempts);
+    if(state.magic){unlock();return}
+    // optional: a set try number unlocks by itself (the tries before it fail)
+    if(state.autoTry>0&&state.attempts.length>=state.autoTry){unlock();return}
     fail();
   }
   function fail(){
@@ -401,20 +410,17 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
     }
   });
   let cancelBackTimer=null;
-  /* Double-tap any empty part of the keypad screen (not the keys, Emergency or Cancel)
-     to slide the clock wallpaper back down */
+  /* Hold any empty part of the keypad screen (not the keys, Emergency or Cancel) for
+     2 seconds to slide the clock wallpaper back down — same as on the home screens */
   (function(){
-    let down=null,last=null;
+    let t=null,sx=0,sy=0;
     const skip=e=>e.target.closest('.key,#emergencyBtn,#cancelBtn');
-    lockEl.addEventListener('pointerdown',e=>{down=skip(e)?null:{x:e.clientX,y:e.clientY,t:Date.now()}});
-    lockEl.addEventListener('pointerup',e=>{
-      if(!down||skip(e))return;
-      const tap=Math.abs(e.clientX-down.x)<14&&Math.abs(e.clientY-down.y)<14&&Date.now()-down.t<350;down=null;
-      if(!tap){last=null;return}
-      const now=Date.now();
-      if(last&&now-last.t<400&&Math.hypot(e.clientX-last.x,e.clientY-last.y)<70){last=null;if(!state.busy)showWall(true)}
-      else last={t:now,x:e.clientX,y:e.clientY};
-    });
+    const cancel=()=>{if(t){clearTimeout(t);t=null}};
+    lockEl.addEventListener('pointerdown',e=>{cancel();if(skip(e))return;sx=e.clientX;sy=e.clientY;
+      t=setTimeout(()=>{t=null;if(!state.busy&&!settingsEl.classList.contains('active'))showWall(true)},2000)});
+    lockEl.addEventListener('pointermove',e=>{if(Math.abs(e.clientX-sx)>10||Math.abs(e.clientY-sy)>10)cancel()});
+    lockEl.addEventListener('pointerup',cancel);lockEl.addEventListener('pointercancel',cancel);
+    lockEl.addEventListener('contextmenu',e=>e.preventDefault());
   })();
   /* Emergency: double tap opens hidden settings */
   let lastEmergencyTap=0;
@@ -1155,6 +1161,7 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
     $('sLen').textContent=state.len+' digits';
     $('sRemembered').textContent=state.attempts.length?state.attempts.join('  '):'—';
     $('cleanBar').checked=state.cleanBar;
+    sel('autoTry',String(state.autoTry));
     $('wallThumb').src=currentWallURL();sel('padStyle',state.padStyle);sel('clockStyle',state.clockStyle);
     $('wallChoice').querySelector('[value=custom]').disabled=!wallBlob;
     sel('wallChoice',state.wallChoice==='custom'&&!wallBlob?'gray':state.wallChoice);
@@ -1206,6 +1213,7 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
   });
   $('clockStyle').addEventListener('change',e=>{state.clockStyle=e.target.value;LS.set('mt_clockStyle',state.clockStyle);lastClock='';drawWall()});
   $('padStyle').addEventListener('change',e=>{state.padStyle=e.target.value;LS.set('mt_padStyle',state.padStyle);applyWall()});
+  $('autoTry').addEventListener('change',e=>{state.autoTry=parseInt(e.target.value,10)||0;LS.set('mt_autoTry',state.autoTry)});
   $('cleanBar').addEventListener('change',e=>{state.cleanBar=e.target.checked;LS.set('mt_cleanBar',state.cleanBar)});
   $('revealMode').addEventListener('change',e=>{state.revealMode=e.target.value;LS.set('mt_revealMode',state.revealMode)});
 
