@@ -216,13 +216,13 @@
 <div id="wall">
   <svg id="wallSvg" viewBox="0 0 1206 2622" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
     <image id="wallImg" x="0" y="0" width="1206" height="2622" preserveAspectRatio="xMidYMid slice"/>
-    <g id="wallInk" opacity="0">
+    <g id="wallLift"><g id="wallInk" opacity="0">
       <text id="wallDate" x="603.5" y="309.5" text-anchor="middle" fill="rgb(20,60,50)"
         style="font:600 68px -apple-system,system-ui,'SF Pro Display','Helvetica Neue',Arial,sans-serif"></text>
       <text id="wallTime" x="603.5" y="614.5" text-anchor="middle" fill="rgb(20,60,50)" lengthAdjust="spacingAndGlyphs"
         style="font:250 370px -apple-system,system-ui,'SF Pro Display','Helvetica Neue',Arial,sans-serif;font-variant-numeric:tabular-nums"></text>
       <g id="wallClock" fill="none" stroke="rgb(20,60,50)" stroke-width="44" stroke-linejoin="round"></g>
-    </g>
+    </g></g>
   </svg>
   <div class="lsBtn l"><svg viewBox="0 0 176 176" aria-hidden="true">
     <path fill="#f4f4f4" d="M69,47Q69,41 75,41H103Q109,41 109,47V57.5H69Z"/>
@@ -812,41 +812,68 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
   }
   setInterval(()=>{if(!wallEl.classList.contains('gone'))drawWall()},1000);
 
+  /* ---------- lock screen <-> keypad, the way iOS does it ----------
+     As you swipe up, the clock, date and buttons rise and fade, the wallpaper blurs and
+     dims, and the passcode keypad fades in while drifting up into place. Letting go
+     finishes the motion (or springs back if the swipe was short). */
+  const liftEls=()=>[...wallEl.querySelectorAll('.lsBtn,.homebar,.wallGear')];
+  const padEls=()=>[lockEl.querySelector('.title'),dotsEl,padEl,$('bottomRow')];
+  let liftP=0,liftAnim=null;
+  function setLift(p){
+    liftP=p;
+    const H=wallEl.clientHeight||innerHeight,svg=$('wallSvg');
+    const k=svg.viewBox.baseVal.height/(svg.clientHeight||H);          // screen px -> wallpaper units
+    const rise=-p*H*0.32;
+    $('wallLift').style.transform='translateY('+(rise*k)+'px)';
+    $('wallLift').style.opacity=String(Math.max(0,1-p*1.8));
+    liftEls().forEach(el=>{el.style.translate='0 '+(rise*0.5)+'px';el.style.opacity=String(Math.max(0,1-p*2.2))});
+    svg.style.filter=p>0?'blur('+(p*22).toFixed(1)+'px) brightness('+(1-p*0.25).toFixed(3)+')':'';
+    wallEl.style.opacity=String(Math.max(0,1-Math.max(0,p-0.35)/0.65));
+    lockEl.style.opacity=String(Math.min(1,Math.max(0,(p-0.15)/0.7)));
+    padEls().forEach(el=>{el.style.translate='0 '+((1-p)*70).toFixed(1)+'px'});
+  }
+  function clearLift(){
+    $('wallLift').style.transform='';$('wallLift').style.opacity='';$('wallSvg').style.filter='';
+    liftEls().forEach(el=>{el.style.translate='';el.style.opacity=''});
+    padEls().forEach(el=>{el.style.translate=''});
+    wallEl.style.opacity='';
+  }
+  function animateLift(to,ms,done){
+    if(liftAnim)cancelAnimationFrame(liftAnim);
+    const from=liftP,t0=performance.now();
+    const step=now=>{
+      const t=Math.min(1,(now-t0)/ms),e=1-Math.pow(1-t,3);              // ease-out
+      setLift(from+(to-from)*e);
+      if(t<1)liftAnim=requestAnimationFrame(step);else{liftAnim=null;done&&done()}
+    };
+    liftAnim=requestAnimationFrame(step);
+  }
   function showWall(animate){
     lastClock='';drawWall();fitWall();setTheme('wall');
+    wallEl.style.transition='none';wallEl.style.transform='';
     wallEl.classList.remove('gone');
-    lockEl.style.opacity='0';
     state.entry='';state.busy=false;renderDots();
-    if(animate){
-      wallEl.style.transition='none';wallEl.style.transform='translateY(-100%)';
-      void wallEl.offsetWidth;
-      wallEl.style.transition='transform .38s cubic-bezier(.2,.8,.2,1)';wallEl.style.transform='translateY(0)';
-    }else{wallEl.style.transition='none';wallEl.style.transform=''}
+    if(animate){setLift(1);animateLift(0,420,()=>{clearLift();lockEl.style.opacity='0'})}
+    else{if(liftAnim)cancelAnimationFrame(liftAnim);liftP=0;clearLift();lockEl.style.opacity='0'}
   }
   function hideWall(){
     setTheme('lock');
-    wallEl.style.transition='transform .3s cubic-bezier(.2,.7,.3,1)';wallEl.style.transform='translateY(-100%)';
-    lockEl.style.transition='opacity .3s';lockEl.style.opacity='1';
-    setTimeout(()=>{wallEl.classList.add('gone');lockEl.style.transition=''},310);
+    animateLift(1,Math.max(180,360*(1-liftP)+120),()=>{wallEl.classList.add('gone');clearLift();lockEl.style.opacity='1';liftP=0});
   }
   (function(){
     let y0=null,t0=0,dy=0;
     const H=()=>wallEl.clientHeight||innerHeight;
-    const start=y=>{y0=y;t0=Date.now();dy=0;wallEl.style.transition='none';lockEl.style.transition='none'};
+    const start=y=>{if(liftAnim){cancelAnimationFrame(liftAnim);liftAnim=null}y0=y;t0=Date.now();dy=0;wallEl.style.transition='none';lockEl.style.transition='none'};
     const move=y=>{
       if(y0===null)return;
       dy=Math.min(0,y-y0);
-      wallEl.style.transform='translateY('+dy+'px)';
-      lockEl.style.opacity=String(Math.min(1,-dy/(H()*0.45)));
+      setLift(Math.min(1,-dy/(H()*0.5)));
     };
     const end=()=>{
       if(y0===null)return;y0=null;
       const v=dy/Math.max(Date.now()-t0,1);
       if(dy<-H()*0.2||(v<-0.45&&dy<-40))hideWall();
-      else{
-        wallEl.style.transition='transform .3s cubic-bezier(.2,.8,.2,1)';wallEl.style.transform='translateY(0)';
-        lockEl.style.transition='opacity .3s';lockEl.style.opacity='0';
-      }
+      else animateLift(0,260,()=>{clearLift();lockEl.style.opacity='0'});
     };
     wallEl.addEventListener('touchstart',e=>{e.preventDefault();if(e.target.closest('#wallGear'))return;start(e.touches[0].clientY)},{passive:false});
     wallEl.addEventListener('touchmove',e=>{e.preventDefault();move(e.touches[0].clientY)},{passive:false});
