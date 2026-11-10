@@ -138,6 +138,8 @@
     <g id="wallInk" opacity=".34">
       <text id="wallDate" x="603.5" y="309.5" text-anchor="middle" fill="rgb(20,60,50)"
         style="font:600 68px -apple-system,system-ui,'SF Pro Display','Helvetica Neue',Arial,sans-serif"></text>
+      <text id="wallTime" x="603.5" y="614.5" text-anchor="middle" fill="rgb(20,60,50)" lengthAdjust="spacingAndGlyphs"
+        style="font:300 370px -apple-system,system-ui,'SF Pro Display','Helvetica Neue',Arial,sans-serif;font-variant-numeric:tabular-nums"></text>
       <g id="wallClock" fill="none" stroke="rgb(20,60,50)" stroke-width="44" stroke-linejoin="round"></g>
     </g>
   </svg>
@@ -173,6 +175,8 @@
     <div class="row"><img id="wallThumb" class="wallThumb" alt=""><div class="btns" style="justify-content:flex-end">
       <label class="btn" for="wallInput">Choose photo</label><button class="btn secondary" id="wallReset">Use built-in</button></div></div>
     <input id="wallInput" type="file" accept="image/*" style="display:none">
+    <div class="row"><label for="clockStyle">Clock style</label>
+      <select id="clockStyle"><option value="tall">Tall (stretched)</option><option value="standard">Standard</option></select></div>
     <div class="row"><label for="padStyle">Keypad look</label>
       <select id="padStyle"><option value="auto">Automatic</option><option value="solid">Solid color</option><option value="glass">Photo + glass keys</option></select></div>
     <p class="muted">Automatic: smooth color or gradient wallpapers get a solid tinted keypad screen; detailed photos show through with glass keys.</p>
@@ -437,6 +441,7 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
   const WALL_DEFAULT=$('wallImg').getAttribute('href');
   let wallBlob=null,wallURL=null;
   state.padStyle=LS.get('mt_padStyle','auto');
+  state.clockStyle=LS.get('mt_clockStyle','tall');
   function currentWallURL(){
     if(wallBlob){if(!wallURL)wallURL=URL.createObjectURL(wallBlob);return wallURL}
     return WALL_DEFAULT;
@@ -487,6 +492,7 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
     }
     $('wallInk').setAttribute('opacity',op);
     $('wallDate').setAttribute('fill',ink);
+    $('wallTime').setAttribute('fill',ink);
     $('wallClock').setAttribute('stroke',ink);
     lastClock='';drawWall();
   }
@@ -525,8 +531,16 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
     const date=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][now.getDay()]+' '+
       ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][now.getMonth()]+' '+now.getDate();
     const hh=String(now.getHours()%12||12),mm=String(now.getMinutes()).padStart(2,'0');
-    const key=date+hh+mm;if(key===lastClock)return;lastClock=key;
+    const key=date+hh+mm+state.clockStyle;if(key===lastClock)return;lastClock=key;
     $('wallDate').textContent=date;
+    if(state.clockStyle==='standard'){
+      // the regular iOS lock screen clock, measured from a screenshot: 9:53 spans 626 px, each extra digit adds 193
+      $('wallClock').innerHTML='';
+      const t=$('wallTime');t.textContent=hh+':'+mm;
+      t.setAttribute('textLength',626+(hh.length-1)*193);
+      return;
+    }
+    $('wallTime').textContent='';
     const ds=[...hh,...mm];
     const total=ds.length*DW+CGAP+(ds.length-2)*DGAP;
     const sx=Math.min(1,1080/total);           // squeeze 4-digit times (like 12:45) to fit
@@ -1085,7 +1099,7 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
     $('sLen').textContent=state.len+' digits';
     $('sRemembered').textContent=state.attempts.length?state.attempts.join('  '):'—';
     $('cleanBar').checked=state.cleanBar;
-    $('wallThumb').src=currentWallURL();sel('padStyle',state.padStyle);
+    $('wallThumb').src=currentWallURL();sel('padStyle',state.padStyle);sel('clockStyle',state.clockStyle);
     sel('revealMode',state.revealMode);
     const list=$('shotList');list.innerHTML='';
     if(!shots.length)list.innerHTML='<p class="muted" style="grid-column:1/-1">Using the 3 built-in screenshots. Adding your own replaces them.</p>';
@@ -1127,6 +1141,7 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
     if(wallURL)URL.revokeObjectURL(wallURL);wallBlob=null;wallURL=null;
     await applyWall();renderSettings();
   });
+  $('clockStyle').addEventListener('change',e=>{state.clockStyle=e.target.value;LS.set('mt_clockStyle',state.clockStyle);lastClock='';drawWall()});
   $('padStyle').addEventListener('change',e=>{state.padStyle=e.target.value;LS.set('mt_padStyle',state.padStyle);applyWall()});
   $('cleanBar').addEventListener('change',e=>{state.cleanBar=e.target.checked;LS.set('mt_cleanBar',state.cleanBar)});
   $('revealMode').addEventListener('change',e=>{state.revealMode=e.target.value;LS.set('mt_revealMode',state.revealMode)});
