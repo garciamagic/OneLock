@@ -69,7 +69,7 @@
   #wall{position:fixed;inset:0;z-index:5;background:#000;touch-action:none;will-change:transform}
   #wall svg{position:absolute;inset:0;width:100%;height:100%;display:block}
   #wall.gone{display:none}
-  #wall .homebar{position:absolute;left:50%;bottom:8.3px;width:144px;height:4.7px;margin-left:-72px;border-radius:3px;background:#fff;opacity:.95;pointer-events:none}
+  #wall .homebar{position:absolute;left:50%;bottom:22px;width:144px;height:4.7px;margin-left:-72px;border-radius:3px;background:#fff;opacity:.95;pointer-events:none}
   /* flashlight + camera buttons: measured from a lock screen screenshot (centers 74.7pt in from the sides, 79.7pt up) */
   #wall .lsBtn{position:absolute;bottom:50.4px;width:58.7px;height:58.7px;border-radius:50%;background:#080808;
     box-shadow:0 0 0 .6px rgba(255,255,255,.14);transition:transform .25s cubic-bezier(.2,.8,.2,1)}
@@ -250,7 +250,12 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
     if(!isStandalone)return;
     const portrait=innerHeight>=innerWidth;
     const full=portrait?Math.max(screen.height,screen.width):Math.min(screen.height,screen.width);
-    const h=Math.max(full,innerHeight);          // only grow, never shrink
+    let h=Math.max(full,innerHeight);            // only grow, never shrink
+    // When iOS also draws its own bar across the top, the page starts below it and the
+    // reported height is short at both ends by about the same amount; the page really
+    // reaches the bottom of the screen, so fill down to there but not past it.
+    const gap=full-innerHeight;
+    if(portrait&&gap>90)h=full-gap/2;
     document.documentElement.classList.add('standalone');
     document.documentElement.style.setProperty('--app-h',h+'px');
   }
@@ -449,14 +454,9 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
   function refreshTheme(){
     const [t,b]=themes[themeNow]||themes.wall;
     $('themeColor').setAttribute('content',t);
-    document.documentElement.style.background=b;document.body.style.background=b;
-    // Experiment: also give the page's root background the wallpaper photo itself. If iOS paints
-    // the root background (not just its color) into the bars it adds, the photo continues into them.
-    const img=themeNow==='wall'||(themeNow==='lock'&&lockEl.classList.contains('glass'))?currentWallURL():null;
-    if(img){
-      const bg='url("'+img+'") center / cover no-repeat '+b;
-      document.documentElement.style.background=bg;
-    }
+    // the only bar iOS still adds is at the top, and it takes the page's background color,
+    // so match it to the top edge of whatever screen is showing
+    document.documentElement.style.background=t;document.body.style.background=t;
   }
   /* fit the lock wallpaper the same way: trim mostly from the top on shorter screens */
   function fitWall(){
@@ -501,7 +501,7 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
         for(let y=0;y<h;y++)for(let X=0;X<w;X++){const i=(y*w+X)*4;
           r+=d[i];g+=d[i+1];b+=d[i+2];n++;
           if(X>0)edge+=Math.abs(lum(i)-lum(i-4));
-          if(y>h*0.07&&y<h*0.1){eT[0]+=d[i];eT[1]+=d[i+1];eT[2]+=d[i+2];eT[3]++}
+          if(y>=h*0.01&&y<h*0.05){eT[0]+=d[i];eT[1]+=d[i+1];eT[2]+=d[i+2];eT[3]++}
           if(y>h*0.93&&y<h*0.96){eB[0]+=d[i];eB[1]+=d[i+1];eB[2]+=d[i+2];eB[3]++}
           if(y>h*0.1&&y<h*0.45){tr+=d[i];tg+=d[i+1];tb+=d[i+2];tn++;const L=lum(i);tl+=L;tl2+=L*L}}
         const detail=edge/(n-h);                         // ~1 for gradients, much higher for photos
