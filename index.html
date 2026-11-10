@@ -408,7 +408,7 @@
 
     <h2 class="part">Part 4: Resetting</h2>
     <ol class="steps">
-      <li><b>Lock it again.</b> On a home page, put your finger in the space just above the top row of apps and slide down, or hold your finger still anywhere for 1 second. The lock screen slides back down.</li>
+      <li><b>Lock it again.</b> On the first home page, swipe from left to right as if going to a page before it. Or hold your finger still anywhere on any home page for 1 second. The lock screen slides back down.</li>
       <li><b>That's it.</b> Locking turns the unlock off, ready for the next person. All the codes are still listed under <b>Remembered Codes</b> in settings until the next person types a code.</li>
     </ol>
 
@@ -421,7 +421,8 @@
       <tr><td>Emergency</td><td>Double-tap: open settings</td></tr>
       <tr><td>Keypad, empty spot</td><td>Hold 1s: back to the lock screen</td></tr>
       <tr><td>Home page</td><td>Double-tap: show the next code</td></tr>
-      <tr><td>Home page</td><td>Slide down from just above the top row of apps, or hold 1s: lock and reset</td></tr>
+      <tr><td>First home page</td><td>Swipe left to right: lock and reset</td></tr>
+      <tr><td>Home page</td><td>Hold 1s: lock and reset</td></tr>
     </table>
 
     <h2 class="part">Before you perform</h2>
@@ -876,34 +877,36 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
     homeEl.addEventListener('scroll',()=>{lastTap=null},{passive:true});
   })();
 
-  /* Pull down from just above the top row of apps: the lock screen slides down over it.
-     (Not from the very top edge: that opens the real iPhone's Notification/Control Center.)
-     Letting go past a quarter of the way locks. */
-  function topRowY(){
-    const im=homeEl.querySelector('.page img');
-    if(!im||!im.naturalWidth)return 90;
-    const m=mapping(im);return 0.103*im.naturalHeight*m.scale+m.offY;   // top of the first row of icons
-  }
+  /* On the first home page, swipe toward the left (finger moving right): the lock screen
+     slides in from the left with your finger. Letting go past a quarter of the way locks. */
   (function(){
-    let y0=null,dy=0,active=false;
-    const H=()=>wallEl.clientHeight||innerHeight;
+    let x0=null,y0=0,dx=0,mode=null;
+    const W=()=>wallEl.clientWidth||innerWidth;
     homeEl.addEventListener('touchstart',e=>{
-      const t=e.touches[0];y0=t.clientY<topRowY()+28?t.clientY:null;dy=0;active=false;
+      const t=e.touches[0];
+      x0=homeEl.scrollLeft<=2?t.clientX:null;y0=t.clientY;dx=0;mode=null;
     },{passive:true});
     homeEl.addEventListener('touchmove',e=>{
-      if(y0===null)return;const t=e.touches[0];dy=t.clientY-y0;
-      if(!active){if(dy<12)return;active=true;lastClock='';drawWall();fitWall();wallEl.classList.remove('gone');wallEl.style.transition='none'}
+      if(x0===null||mode==='no')return;
+      const t=e.touches[0];dx=t.clientX-x0;const dy=t.clientY-y0;
+      if(!mode){
+        if(Math.abs(dx)<10&&Math.abs(dy)<10)return;
+        mode=(dx>0&&Math.abs(dx)>Math.abs(dy))?'go':'no';
+        if(mode==='no')return;
+        lastClock='';drawWall();fitWall();wallEl.classList.remove('gone');wallEl.style.transition='none';
+      }
       e.preventDefault();
-      wallEl.style.transform='translateY('+(Math.min(dy,H())-H())+'px)';
+      wallEl.style.transform='translateX('+(Math.min(Math.max(dx,0),W())-W())+'px)';
     },{passive:false});
     const end=()=>{
-      if(y0===null)return;y0=null;if(!active)return;active=false;
-      if(dy>H()*0.25){
-        wallEl.style.transition='transform .3s cubic-bezier(.2,.8,.2,1)';wallEl.style.transform='translateY(0)';
+      if(mode!=='go'){x0=null;mode=null;return}
+      x0=null;mode=null;
+      if(dx>W()*0.25){
+        wallEl.style.transition='transform .3s cubic-bezier(.2,.8,.2,1)';wallEl.style.transform='translateX(0)';
         setTimeout(relock,310);
       }else{
-        wallEl.style.transition='transform .25s ease';wallEl.style.transform='translateY(-100%)';
-        setTimeout(()=>wallEl.classList.add('gone'),260);
+        wallEl.style.transition='transform .25s ease';wallEl.style.transform='translateX(-100%)';
+        setTimeout(()=>{wallEl.classList.add('gone');wallEl.style.transform=''},260);
       }
     };
     homeEl.addEventListener('touchend',end);homeEl.addEventListener('touchcancel',end);
