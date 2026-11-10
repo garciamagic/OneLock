@@ -321,6 +321,7 @@
       <h3>Your Home Screens</h3>
       <p class="sub" id="shotsSub">Add screenshots of your home screen pages, in swipe order. Use the arrows to reorder.</p>
       <div id="shotList" class="shots"></div>
+      <p class="note"><b>Tip:</b> A solid black, solid color, or dark wallpaper looks best and is recommended. Photo wallpapers will move as the pages move.</p>
       <div class="btn-row">
         <label class="gbtn blue" for="fileInput">+ Add screenshots</label>
         <button class="gbtn" id="testHome">Preview</button>
@@ -1427,9 +1428,14 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
     setSeg('clockSeg',state.clockStyle);setSeg('padSeg',state.padStyle);
     $('lsBtns').checked=state.lsBtns;$('lsBar').checked=state.lsBar;
     // home screens
-    $('shotsSub').textContent=shots.length?'Your screenshots, in swipe order. Use the arrows to reorder.':'Using the built-in screenshots. Add screenshots of your own home screen pages, in swipe order.';
+    $('shotsSub').textContent=shots.length?'Your screenshots, in swipe order. Use the arrows to reorder.':'Currently using these built-in pages. Add screenshots of your own home screen pages, in swipe order, to replace them.';
     $('removeAll').style.display=shots.length?'':'none';
-    const list=$('shotList');list.innerHTML='';list.style.display=shots.length?'':'none';
+    const list=$('shotList');list.innerHTML='';list.style.display='';
+    if(!shots.length)PLACEHOLDERS.forEach((src,i)=>{
+      const d=document.createElement('div');d.className='shot';
+      d.innerHTML='<img alt=""><span class="num">'+(i+1)+'</span><div class="ctl"><button disabled style="color:#8e9096;font-size:13px">Built-in</button></div>';
+      d.querySelector('img').src=src;list.appendChild(d);
+    });
     shots.forEach((s,i)=>{
       const d=document.createElement('div');d.className='shot';
       d.innerHTML='<img alt=""><span class="num">'+(i+1)+'</span><div class="ctl"><button data-a="l" aria-label="Move left">◀</button><button class="x" data-a="x" aria-label="Remove">✕</button><button data-a="r" aria-label="Move right">▶</button></div>';
