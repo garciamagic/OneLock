@@ -978,15 +978,27 @@ const WX_ICONS={
       dy=Math.min(0,y-y0);
       setLift(Math.min(1,-dy/(H()*0.5)));
     };
+    const springBack=()=>animateLift(0,260,()=>{clearLift();lockEl.style.opacity='0'});
     const end=()=>{
       if(y0===null)return;y0=null;
       const v=dy/Math.max(Date.now()-t0,1);
       if(dy<-H()*0.2||(v<-0.45&&dy<-40))hideWall();
-      else animateLift(0,260,()=>{clearLift();lockEl.style.opacity='0'});
+      else springBack();
     };
-    wallEl.addEventListener('touchstart',e=>{e.preventDefault();if(e.target.closest('#wallGear'))return;start(e.touches[0].clientY)},{passive:false});
+    // iOS took the touch over (e.g. swiping up to leave the app): never treat that as unlocking
+    const cancel=()=>{if(y0===null)return;y0=null;springBack()};
+    wallEl.addEventListener('touchstart',e=>{
+      e.preventDefault();if(e.target.closest('#wallGear'))return;
+      const y=e.touches[0].clientY;
+      if(y>H()-34)return;              // the strip along the bottom edge belongs to iOS's swipe-home gesture
+      start(y);
+    },{passive:false});
     wallEl.addEventListener('touchmove',e=>{e.preventDefault();move(e.touches[0].clientY)},{passive:false});
-    wallEl.addEventListener('touchend',end);wallEl.addEventListener('touchcancel',end);
+    wallEl.addEventListener('touchend',end);wallEl.addEventListener('touchcancel',cancel);
+    // leaving the app in the middle of a swipe: put the lock screen back
+    document.addEventListener('visibilitychange',()=>{
+      if(document.hidden&&y0!==null){y0=null;if(liftAnim){cancelAnimationFrame(liftAnim);liftAnim=null}liftP=0;clearLift();lockEl.style.opacity='0'}
+    });
     wallEl.addEventListener('mousedown',e=>{e.preventDefault();if(e.target.closest('#wallGear'))return;start(e.clientY)});
     addEventListener('mousemove',e=>move(e.clientY));addEventListener('mouseup',end);
   })();
