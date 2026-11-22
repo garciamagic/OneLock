@@ -517,7 +517,7 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
     entry:'',
     busy:false,
     attempts:LS.get('mt_attempts',[]),
-    newRound:LS.get('mt_newRound',false),
+    newRound:true,   // every launch starts a fresh round: the first code typed clears the last session's codes
     revealMode:(v=>v==='last'?'last':'first')(LS.get('mt_revealMode','first')),
     cleanBar:true,   // always paint out the screenshot's old clock; the phone's live one shows instead
     autoTry:LS.get('mt_autoTry',0)
