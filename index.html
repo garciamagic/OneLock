@@ -845,6 +845,34 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
   };
   const DW=228,DGAP=45,CGAP=144,CTOP=350,CX=603;
   let lastClock='';
+  /* The iPhone's standard lock screen clock, measured from real screenshots (1206-px-wide):
+     digits are 260 px tall, a "0" is 178 px wide, and strokes are 14 px thick. Fonts differ a
+     little between iOS versions, so the app measures the rounded system font on this phone
+     once, then picks the weight and the horizontal stretch that match those numbers. */
+  const CLOCK_FONT="ui-rounded,'SF Pro Rounded',-apple-system,system-ui,'Helvetica Neue',Arial,sans-serif";
+  let clockCalib=null;
+  function clockCal(){
+    if(clockCalib)return clockCalib;
+    const H=260,ZERO_W=178,STEM=14;
+    let best={w:200,size:370,sx:1,desc:0},bestD=1e9;
+    try{
+      const c=document.createElement('canvas');c.width=360;c.height=320;
+      const x=c.getContext('2d',{willReadFrequently:true});
+      for(const w of [100,125,150,175,200,225,250,300]){
+        x.clearRect(0,0,360,320);x.font=w+' 200px '+CLOCK_FONT;x.fillStyle='#000';x.textBaseline='alphabetic';x.fillText('0',80,260);
+        const d=x.getImageData(0,0,360,320).data,on=(X,Y)=>d[(Y*360+X)*4+3]>127;
+        let l=360,r=-1,t=320,b=-1;
+        for(let Y=0;Y<320;Y++)for(let X=0;X<360;X++)if(on(X,Y)){if(X<l)l=X;if(X>r)r=X;if(Y<t)t=Y;if(Y>b)b=Y}
+        if(r<0)continue;
+        const inkW=r-l+1,inkH=b-t+1,mid=Math.round((t+b)/2);
+        let X=l;while(X<r&&!on(X,mid))X++;let stem=0;while(X<=r&&on(X,mid)){stem++;X++}
+        const k=H/inkH,sx=(ZERO_W/inkW)/k;            // size to the right height, then stretch to the right width
+        const dd=Math.abs(stem*k*sx-STEM);
+        if(dd<bestD){bestD=dd;best={w,size:200*k,sx,desc:(b-260+1)*k}}
+      }
+    }catch(e){}
+    return clockCalib=best;
+  }
   function drawWall(){
     const now=new Date();
     const date=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][now.getDay()]+' '+
@@ -853,10 +881,13 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
     const key=date+hh+mm+state.clockStyle;if(key===lastClock)return;lastClock=key;
     $('wallDate').textContent=date;
     if(state.clockStyle==='standard'){
-      // the regular iOS lock screen clock, measured from a screenshot: 9:53 spans 626 px, each extra digit adds 193
       $('wallClock').innerHTML='';
-      const t=$('wallTime');t.textContent=hh+':'+mm;
-      t.setAttribute('textLength',626+(hh.length-1)*193);
+      const t=$('wallTime'),c=clockCal();
+      t.textContent=hh+':'+mm;
+      t.removeAttribute('textLength');t.removeAttribute('lengthAdjust');
+      t.setAttribute('x','0');t.setAttribute('y','0');
+      t.setAttribute('transform','translate(608 '+(614-c.desc).toFixed(1)+') scale('+c.sx.toFixed(4)+' 1)');
+      t.style.font=c.w+' '+c.size.toFixed(1)+'px '+CLOCK_FONT;
       return;
     }
     $('wallTime').textContent='';
