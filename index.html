@@ -34,6 +34,7 @@
   :root[data-theme="dark"]{ color-scheme:dark; }
   @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --bg:#000; } }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  body{position:fixed;left:0;top:0;width:100%}
   html,body{height:100%;background:var(--bg);color:var(--fg);overflow:hidden;overscroll-behavior:none;
     font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Helvetica Neue",Arial,sans-serif;touch-action:manipulation}
   .screen{position:fixed;inset:0;display:none;background:#000}
@@ -500,6 +501,10 @@ const PLACEHOLDERS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYE
   fitScreen();
   addEventListener('resize',fitScreen);
   addEventListener('orientationchange',()=>setTimeout(fitScreen,300));
+
+  // keep the page pinned at the top (iOS sometimes scrolls it, which offsets taps from what you see)
+  addEventListener('scroll',()=>{if(scrollX||scrollY)scrollTo(0,0)},{passive:true});
+  if(window.visualViewport)visualViewport.addEventListener('scroll',()=>{if(scrollX||scrollY)scrollTo(0,0)});
 
   /* ---------- storage helpers ---------- */
   const LS={
@@ -1047,6 +1052,7 @@ const WX_ICONS={
     liftAnim=requestAnimationFrame(step);
   }
   function showWall(animate){
+    wallHiding=false;wallEl.style.pointerEvents='';
     lastClock='';drawWall();fitWall();setTheme('wall');if(typeof fetchWx==='function')fetchWx(false);
     wallEl.style.transition='none';wallEl.style.transform='';
     wallEl.classList.remove('gone');
@@ -1054,14 +1060,23 @@ const WX_ICONS={
     if(animate){setLift(1);animateLift(0,420,()=>{clearLift();lockEl.style.opacity='0'})}
     else{if(liftAnim)cancelAnimationFrame(liftAnim);liftP=0;clearLift();lockEl.style.opacity='0'}
   }
+  let wallHiding=false;
+  function finishHide(){
+    if(!wallHiding)return;wallHiding=false;
+    if(liftAnim){cancelAnimationFrame(liftAnim);liftAnim=null}
+    wallEl.classList.add('gone');wallEl.style.pointerEvents='';clearLift();lockEl.style.opacity='1';liftP=0;
+  }
   function hideWall(){
     setTheme('lock');
-    animateLift(1,Math.max(180,360*(1-liftP)+120),()=>{wallEl.classList.add('gone');clearLift();lockEl.style.opacity='1';liftP=0});
+    wallHiding=true;wallEl.style.pointerEvents='none';
+    const ms=Math.max(180,360*(1-liftP)+120);
+    animateLift(1,ms,finishHide);
+    setTimeout(finishHide,ms+150);            // safety net: always end up on a clean keypad
   }
   (function(){
     let y0=null,t0=0,dy=0;
     const H=()=>wallEl.clientHeight||innerHeight;
-    const start=y=>{if(liftAnim){cancelAnimationFrame(liftAnim);liftAnim=null}y0=y;t0=Date.now();dy=0;wallEl.style.transition='none';lockEl.style.transition='none'};
+    const start=y=>{if(wallHiding)return;if(liftAnim){cancelAnimationFrame(liftAnim);liftAnim=null}y0=y;t0=Date.now();dy=0;wallEl.style.transition='none';lockEl.style.transition='none'};
     const move=y=>{
       if(y0===null)return;
       dy=Math.min(0,y-y0);
